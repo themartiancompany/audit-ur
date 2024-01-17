@@ -61,13 +61,13 @@ prepare() {
 
 build() {
   local configure_options=(
+    --enable-gssapi-krb5=yes
+    --enable-systemd=yes
+    --enable-zos-remote
+    --libexecdir=/usr/lib/audit
     --prefix=/usr
     --sbindir=/usr/bin
     --sysconfdir=/etc
-    --libexecdir=/usr/lib/audit
-    --enable-zos-remote
-    --enable-gssapi-krb5=yes
-    --enable-systemd=yes
     --with-io_uring=yes
     --with-libcap-ng=yes
     --with-python=no
