@@ -7,6 +7,7 @@
 # Contributor: Connor Behan <connor.behan@gmail.com>
 # Contributor: henning mueller <henning@orgizm.net>
 
+_apparmor="false"
 pkgbase=audit
 _name=audit-userspace
 pkgname=(
@@ -17,11 +18,14 @@ pkgver=4.0
 pkgrel=1
 pkgdesc='Userspace components of the audit framework'
 url='https://people.redhat.com/sgrubb/audit'
-arch=(x86_64)
+arch=(
+  x86_64
+  arm)
 license=(
   GPL-2.0-or-later
   LGPL-2.0-or-later
 )
+
 makedepends=(
   apparmor
   glibc
