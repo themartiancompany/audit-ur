@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0
+#
+# Maintainer: Truocolo <truocolo@aol.com>
+# Maintainer: Pellegrino Prevete (tallero) <pellegrinoprevete@gmail.com>
 # Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Contributor: Christian Rebischke <Chris.Rebischke@archlinux.org>
@@ -7,7 +11,16 @@
 # Contributor: Connor Behan <connor.behan@gmail.com>
 # Contributor: henning mueller <henning@orgizm.net>
 
-_apparmor="false"
+_systemd="yes"
+_ldap="libldap"
+_apparmor="yes"
+_os="$( \
+  uname \
+  -o)"
+[[ "${_os}" == "Android" ]] && \
+  _apparmor="no" \
+  _ldap="openldap" \
+  _systemd="no"
 pkgbase=audit
 _name=audit-userspace
 pkgname=(
@@ -20,22 +33,26 @@ pkgdesc='Userspace components of the audit framework'
 url='https://people.redhat.com/sgrubb/audit'
 arch=(
   x86_64
-  arm)
+  arm
+  aarch64
+)
 license=(
   GPL-2.0-or-later
   LGPL-2.0-or-later
 )
-
 makedepends=(
-  apparmor
   glibc
   krb5
   libcap-ng
-  libldap
+  "${_ldap}"
   linux-api-headers
   python
   swig
 )
+[[ "${_apparmor}" == yes ]] && \
+  makedepends+=(
+    apparmor
+  )
 options=(emptydirs)
 source=(
   https://github.com/linux-audit/$_name/archive/v$pkgver/$_name-v$pkgver.tar.gz
@@ -61,22 +78,29 @@ _pick() {
 
 prepare() {
   # use /usr and /bin merge compatible paths in configs and services
-  patch -Np1 -d $pkgbase-userspace-$pkgver -i ../$pkgbase-4.0-executable_paths.patch
-
-  cd $_name-$pkgver
-  autoreconf -fiv
+  patch \
+    -Np1 \
+    -d \
+    $pkgbase-userspace-$pkgver \
+    -i \
+    ../$pkgbase-4.0-executable_paths.patch
+  cd \
+    $_name-$pkgver
+  libtoolize
+  autoreconf \
+    -fiv
 }
 
 build() {
   local configure_options=(
     --enable-gssapi-krb5=yes
-    --enable-systemd=yes
+    --enable-systemd="${_systemd}"
     --enable-zos-remote
     --libexecdir=/usr/lib/audit
     --prefix=/usr
     --sbindir=/usr/bin
     --sysconfdir=/etc
-    --with-apparmor=yes
+    --with-apparmor="${_apparmor}"
     --with-io_uring=yes
     --with-libcap-ng=yes
     --with-python3=yes
@@ -85,7 +109,11 @@ build() {
   cd $_name-$pkgver
   ./configure "${configure_options[@]}"
   # prevent excessive overlinking due to libtool
-  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  sed \
+    -i \
+    -e \
+      's/ -shared / -Wl,-O1,--as-needed\0/g' \
+    libtool
   make
 }
 
@@ -145,12 +173,17 @@ package_audit() {
 package_python-audit() {
   pkgdesc+=' - Python bindings'
   depends=(
-    audit libaudit.so libauparse.so
+    audit
+    libaudit.so
+    libauparse.so
     glibc
     python
   )
 
-  mv -v $pkgname/* "$pkgdir"
+  mv \
+    -v \
+    "${pkgname}/"* \
+    "${pkgdir}"
 }
 
 # vim: ts=2 sw=2 et:
