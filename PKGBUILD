@@ -15,6 +15,7 @@ _systemd="yes"
 _ldap="libldap"
 _apparmor="yes"
 _python="yes"
+_py="python"
 _os="$( \
   uname \
   -o)"
